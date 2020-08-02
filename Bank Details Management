@@ -1,0 +1,393 @@
+#include <iostream>                                                         //@Raju Roy and Sabuj Chaki
+#include <conio.h>
+#include <stdio.h>
+#include <iomanip>
+#include <fstream>
+#include <ctype.h>
+using namespace std;
+
+struct account 
+{           
+    int pin;                    //stores pin
+    char name[50];
+    int deposit;               //stores balance
+    char type;
+    int an;                     // stores account numbers
+
+    void create_account();     // gets data from the user
+    void modify();             //adds new data   
+    void dep(int);             //accepts amount and add to the balance
+    void draw(int);            //accepts amount and subtract from the balance
+    void report() const;       //shows data in tabular format
+    void show_account() const; //shows data 
+    int returnan() const;       //returns account number
+    int returnpin() const;       //returns pin
+    int returndeposit() const;    //returns balance
+    char returntype() const;      //returns type of account
+   
+};                             
+void account::create_account()
+{
+    cout << "\nEnter The account No.(First digit must be non-zero) :";
+    cin >> an;
+    cout<<"\nEnter new PIN(digits only) :";
+    cin>>pin;
+    cout << "\n\nName of The Account Holder : ";
+    cin.ignore();
+    cin.getline(name, 50);
+    cout << "\nType of The account (Current/Savings) : ";
+    cin >> type;
+    type = toupper(type);
+    cout << "\nThe Initial amount to be Deposited: ";
+    cin >> deposit;
+    cout << "\n\nDone!\n\n Congratulations!! Your account has been created..";
+}
+void account::show_account() const
+{    
+    cout << "\nYour Account No. : " << an;
+    cout << "\nName of the Account Holder : "<< name;
+    cout<<"\nPIN: **"<<pin%100;
+    cout << "\nType of Account : " << type;
+    cout << "\n Current Balance : " << deposit;
+    cout<<endl;
+}
+void account::modify()
+{    
+    cout << "\nNew Account No. : " << an;
+    cout << "\nNew Account Holder Name : ";
+    cin.ignore();
+    cin.getline(name, 50);
+    cout << "\nType of Account : ";
+    cin >> type;
+    type = toupper(type);   
+}
+
+void account::dep(int x)
+{
+    deposit += x;
+}
+
+void account::draw(int x)
+{
+    deposit -= x;
+}
+
+void account::report() const
+{
+    cout << an << setw(10) << " \t" << name << setw(10) << "\t" << type << setw(6) << "\t" << deposit << endl;
+}
+
+int account::returnan() const
+{
+    return an;
+}
+int account::returnpin() const
+{
+    return pin;
+}
+
+int account::returndeposit() const
+{
+    return deposit;
+}
+
+char account::returntype() const
+{
+    return type;
+}
+
+void intro();                        //introduction
+void write_account();                // writes the records in binary file format
+void modify_account(int, int);       // modifies record from the file
+void deposit_withdraw(int, int, int); //desposits or withdraws user amount for given account
+void delete_account(int, int);       //deletes record from the file
+void display_sp(int,int);            // displays user account details
+void display_all();                  //displays all the user account details
+
+int main()
+{
+    char ch; 
+    int num,pin,c=0;
+    account ac;                                     // creating an object
+    intro();
+    do
+    {
+        cout << "\n\n\n\tMAIN MENU";
+        cout << "\n\n\tSelect Your Option from [1-8]::: ";
+        cout << "\n\n\t1. Create an Account";
+        cout << "\t\t\t\t2. Change Details";
+        cout << "\n\n\t3. Deposit";
+        cout << "\t\t\t\t\t4. Withdraw";
+        cout << "\n\n\t5. Check your Balance";        
+        cout << "\t\t\t\t6. Close your Existing Account/s";        
+        cout << "\n\n\t7. All Account Details";
+        cout << "\t\t\t\t8. EXIT\n\n";
+        
+        cin>>ch;      
+        system("cls");
+        switch (ch)
+        {
+        case '1':
+            write_account();
+            break;
+
+        case '2':
+            cout << "\n\n\tEnter The account No. : ";
+            cin >> num;
+            cout << "\nEnter PIN:";
+            cin >> pin;
+            modify_account(pin, num);
+            break;
+
+        case '3':
+            cout << "\n\n\tEnter Your Account No. : ";
+            cin >> num;
+            cout << "\nEnter PIN:";
+            cin >> pin;
+            deposit_withdraw(pin,num, 1);
+            break;
+
+        case '4':
+            cout << "\n\n\tEnter The account No. : ";
+            cin >> num;
+            cout << "\nEnter PIN:";
+            cin >> pin;
+            deposit_withdraw(pin,num, 2);
+            break;
+
+        case '5':
+            cout << "\n\n\tEnter The account No. : ";
+            cin >> num;
+            cout << "\nEnter your PIN:";
+            cin >> pin;
+            display_sp(pin,num);
+            break;
+
+        case '6':
+            cout << "\n\n\tEnter The account No. : ";
+            cin >> num;
+            cout << "\nEnter 4-digit PIN:";
+            cin >> pin;
+            delete_account(pin, num);
+            break;
+
+        case '7':
+            display_all();
+            break;       
+        
+        case '8':
+            cout << "\n\n\tThanks for using our bank management system";
+            break;
+
+        default:
+            cout << "\a";
+        }
+        cin.ignore();
+        cin.get();        
+    } while (ch>='1' && ch <= '8');
+
+    return 0;
+}
+
+void intro() //Intro
+{
+    cout << "\n\n\n\t \t\t\t\t\t\t BANK MANAGEMENT SYSTEM";
+    cout << "\n\n\t\t\t\t\t  SCHOOL :::BSF SR. SECONDARY RESI. SCHOOL,KADAMTALA\n\n\n\n\t \t\t\t\t\t       (Press 'Enter' to Continue...)";
+    cin.get();
+}
+
+void write_account()                                                            //to write in a file
+{
+    account ac;
+    ofstream of;
+    of.open("account.dat",ios::binary | ios::app);
+    ac.create_account();
+    of.write((char *)&ac, sizeof(account));
+    of.close();
+}
+
+void deposit_withdraw(int pin, int n, int option) //deposit and withdraw
+{
+    int amt;
+    int found = 0;
+    account ac;
+    ifstream inFile;
+    ofstream outFile;
+    inFile.open("account.dat", ios::binary);
+    if (!inFile)
+    {
+        cout << "File could not be open !! Press any Key...";
+        return;
+    }
+    outFile.open("Temp.dat", ios::binary);
+    inFile.seekg(0, ios::beg);
+    while (!inFile.eof() && found == 0)
+    {
+        inFile.read((char *)&ac, sizeof(account));
+        if (ac.returnpin() == pin)
+        {
+            if (ac.returnan() == n)
+            {
+                ac.show_account();
+                if (option == 1)
+                {
+                    cout << "\n\n\tTO DEPOSITE AMOUNT ";
+                    cout << "\n\nEnter The amount to be deposited\n";
+                    cin >> amt;
+                    ac.dep(amt);
+                    cout << "\nYour New Balance::  Rs " << (ac.returndeposit());
+                }
+                if (option == 2)
+                {
+                    cout << "\n\n\tTO WITHDRAW AMOUNT ";
+                    cout << "\n\nEnter The amount to be withdraw\n";
+                    cin >> amt;
+                    int bal = ac.returndeposit() - amt;
+                    if ((bal < 500 && ac.returntype() == 'S') || (bal < 1000 && ac.returntype() == 'C'))
+                        cout << "Insufficience balance";
+                    else
+                    {
+                        ac.draw(amt);
+                        cout << "\nYour New Balance::  Rs " << bal;
+                    }
+                }
+                cout << "\n\t Record Updated\nThank You for using our service!\n\n\t \t\t\t\t\t       (Press 'Enter' to go back to main menu...)";
+                found = 1;
+            }
+        }
+        outFile.write((char *)&ac, sizeof(account));
+    }
+    inFile.close();
+    outFile.close();
+    remove("account.dat");
+    rename("Temp.dat", "account.dat");
+    remove("Temp.dat");
+
+    if (found == 0)
+        cout << "\n\n No Records Found! ";
+}
+
+void modify_account(int pin,int n)                                                     //modifies account
+{
+    int found = 0;
+    account ac;
+    
+    fstream File;
+    File.open("account.dat", ios::binary | ios::in | ios::out);
+    if (!File)
+    {
+        cout << "Invalid File!!\n\n Press any Key...";
+        return;
+    }
+    while (!File.eof() && found == 0)
+
+    {
+        File.read((char *)&ac, sizeof(ac));
+        if (ac.returnpin() == pin)
+        {
+            if (ac.returnan() == n)
+            {
+                ac.show_account();
+                cout << "\n\nEnter The New Details of account" << endl;
+                ac.modify();
+                int pos = (-1) * (sizeof(ac));
+                File.seekp(pos, ios::cur);
+                File.write((char *)&ac, sizeof(ac));
+
+                cout << "\n\n\t Record Updated!";
+                found = 1;
+            }
+        }
+    }
+    File.close();
+    if (found == 0 )
+        cout << "\n\n Record Not Found! ";
+}
+
+void delete_account(int pin,int n)                                                  //to delete
+{
+    int flag = 1;
+    account ac;    
+    ifstream inFile;
+    ofstream outFile;
+    inFile.open("account.dat", ios::binary);
+    if (!inFile)
+    {
+        cout << "Invalid File!!\n\n Press any Key...";
+        return;
+    }
+    outFile.open("Temp.dat", ios::binary);
+    inFile.seekg(0, ios::beg);
+    while (inFile.read((char *)&ac, sizeof(account)))
+    {   
+
+        if (ac.returnpin() != pin)
+        {
+            outFile.write((char *)&ac, sizeof(ac));
+        }
+        else
+            flag = 0;    
+    }
+    inFile.close();
+    outFile.close();
+    remove("account.dat");
+    rename("Temp.dat", "account.dat");
+    if (flag == 0)
+        cout << "\n\n\tRecord Deleted! ..";
+    else
+        cout << "\n\n\tInvalid Account Number!";   
+}
+
+void display_sp(int pin, int n) //specific data
+{
+    account ac;
+    int flag = 0;
+    ifstream ifile;
+    ifile.open("account.dat", ios::binary);
+    if (!ifile)
+    {
+        cout << "Invalid File!!\n\n Press any Key...";
+        return;
+    }
+    cout << "\nBALANCE DETAILS\n";
+
+    while (ifile.read((char *)&ac, sizeof(account)))
+    {
+        if (ac.returnpin() == pin)
+        {
+            if (ac.returnan() == n)
+            {
+                ac.show_account();
+                flag = 1;
+            }
+        }
+    }
+    ifile.close();
+
+    if (flag == 0)
+        cout << "\n\nInvalid Account number!";
+}
+
+void display_all()                  //display
+{
+    account ac;
+    ifstream inFile;
+    inFile.open("account.dat", ios::binary);
+    if (!inFile)
+    {
+        cout << "Invalid File!!\n\n Press any Key...";
+        return;
+    }
+    cout << "\n\n\t\tACCOUNT HOLDER LIST\n\n";
+    cout << "------------------------------------------------------------\n";
+    cout << "A/c no.      NAME           \t  Type \t            Balance(Rs.)\n";    
+    cout << "------------------------------------------------------------\n";
+    while (inFile.read((char *)&ac, sizeof(ac)))
+    {
+        ac.report();
+    }
+    inFile.close();
+}
+
+
+//----------------------------------------------------The End-------------------------------------------//
